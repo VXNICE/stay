@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StayFind · Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <base href="/final/">
+  <style>
+    body{
+      background:
+        radial-gradient(1200px 600px at 100% -20%, #dbeafe33 0%, transparent 60%),
+        radial-gradient(1000px 600px at -10% 110%, #fce7f333 0%, transparent 60%),
+        #f8fafc;
+    }
+    input[type="range"]{appearance:none;height:6px;border-radius:9999px;background:#e5e7eb;outline:none}
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:18px;height:18px;border-radius:9999px;background:#2563eb;border:3px solid #fff;box-shadow:0 1px 2px rgb(0 0 0 / .15)
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:18px;height:18px;border-radius:9999px;background:#2563eb;border:3px solid #fff;box-shadow:0 1px 2px rgb(0 0 0 / .15)
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800">
+  <!-- Top Bar -->
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500"></div>
+        <h1 class="text-lg font-semibold tracking-tight">StayFind</h1>
+      </div>
+
+      <nav class="ml-6 hidden md:flex items-center gap-2">
+        <a href="dashboard.html" class="px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm">Dashboard</a>
+        <a href="#units" class="px-3 py-1.5 rounded-full hover:bg-slate-100 text-sm">Units</a>
+        <a href="settings.html" class="px-3 py-1.5 rounded-full hover:bg-slate-100 text-sm">Settings</a>
+
+        <!-- Approvals button (shown for admins via JS) -->
+        <button id="openApprovalsBtn"
+          class="hidden ml-2 px-3 py-1.5 rounded-full bg-amber-500 text-white text-sm hover:bg-amber-600">
+          Approvals
+          <span id="approvalsBadge" class="ml-2 hidden rounded-full bg-white/20 px-2 text-[11px]">0</span>
+        </button>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-3">
+        <div class="text-right leading-tight">
+          <p class="text-xs text-slate-500">Signed in as</p>
+          <p id="signedInName" class="text-sm font-medium">Loading…</p>
+          <p id="signedInRole" class="text-[11px] text-slate-500"></p>
+        </div>
+        <button id="logoutBtn" class="hidden md:inline-flex px-3 py-1.5 rounded-full bg-slate-900 text-white text-sm hover:bg-slate-800">
+          Logout
+        </button>
+        <button id="logoutBtnMobile" class="md:hidden inline-flex px-3 py-1.5 rounded-full bg-slate-900 text-white text-sm">
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <section class="max-w-7xl mx-auto px-4 pt-8">
+    <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+      <div class="flex-1">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h2>
+        <p class="text-sm text-slate-600 mt-1">Browse and manage units. Use filters to narrow results.</p>
+      </div>
+      <button
+        id="addUnitBtn"
+        type="button"
+        title="Only admins/owners/managers can add units"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-sm"
+      >
+        <span class="text-lg leading-none">＋</span>
+        <span class="font-medium">Add Unit</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Filters -->
+  <section class="max-w-7xl mx-auto px-4 mt-6">
+    <div class="rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-4">
+      <div class="grid gap-4 md:grid-cols-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Location</label>
+          <select id="filterLocation" class="w-full border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/30">
+            <option value="">All locations</option>
+          </select>
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-slate-700">Min price (₱)</label>
+            <span class="text-xs text-slate-500">₱ <span id="minPriceLabel">0</span></span>
+          </div>
+          <input id="filterMinPrice" type="range" min="0" max="10000" step="100" value="0" class="w-full mt-2">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-slate-700">Max price (₱)</label>
+            <span class="text-xs text-slate-500">₱ <span id="maxPriceLabel">20000</span></span>
+          </div>
+          <input id="filterMaxPrice" type="range" min="0" max="20000" step="100" value="20000" class="w-full mt-2">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Units Grid -->
+  <section class="max-w-7xl mx-auto px-4 mt-6 pb-24">
+    <div id="units" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <p id="empty" class="hidden text-center text-slate-500 mt-10">No units found.</p>
+  </section>
+
+  <!-- Unit Modal -->
+  <div id="unitModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="unitModalTitle" class="text-lg font-semibold">Add Unit</h3>
+        <button id="unitModalClose" class="text-slate-500 hover:text-slate-700">✖</button>
+      </div>
+
+      <form id="unitForm" class="p-5 space-y-4" enctype="multipart/form-data">
+        <input type="hidden" name="id">
+        <input type="hidden" name="existing_image_path">
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Title</label>
+            <input name="title" required class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Capacity</label>
+            <input name="capacity" type="number" min="0" class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Location (text)</label>
+            <input name="location" class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Price (₱)</label>
+            <input name="price_per_night" type="number" min="0" step="0.01" class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Location Link (Google Maps/Earth URL)</label>
+          <input name="location_link" placeholder="https://maps.google.com/..." class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Image (optional)</label>
+          <input name="image" type="file" accept="image/*" class="w-full border rounded-xl px-3 py-2 border-slate-300 bg-white" />
+          <p class="text-xs text-slate-500 mt-1">JPG/PNG/WEBP up to 5MB (optional).</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Description</label>
+          <textarea name="description" rows="3" class="w-full border rounded-xl px-3 py-2 border-slate-300 focus:ring-2 focus:ring-blue-500/30"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="unitCancel" class="px-4 py-2 rounded-full border border-slate-300 hover:bg-slate-50">Cancel</button>
+          <button id="unitSubmit" class="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div id="viewModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+      <img id="viewImg" alt="" class="w-full h-60 object-cover bg-slate-200">
+      <div class="px-5 py-4 space-y-2">
+        <div class="flex items-start justify-between">
+          <h3 id="viewTitle" class="text-xl font-semibold">Title</h3>
+        </div>
+        <p id="viewLocation" class="text-sm text-slate-600"></p>
+        <div class="flex items-center gap-4 text-sm text-slate-700">
+          <span id="viewPrice"></span>
+          <span id="viewCapacity"></span>
+        </div>
+        <p id="viewDesc" class="text-sm leading-6 text-slate-700"></p>
+        <div id="viewLocationLinkWrap" class="pt-2 hidden">
+          <a id="viewLocationLink" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-3 py-2 rounded-full border hover:bg-slate-50 text-sm">
+            📍 Open location
+          </a>
+        </div>
+
+        <div class="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+          <button id="viewBookBtn" class="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700">Book Now</button>
+          <button id="viewCloseBtn" class="px-4 py-2 rounded-full border hover:bg-slate-50">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div id="bookingModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Book Room</h3>
+        <button id="bookingClose" class="text-slate-500 hover:text-slate-700">✖</button>
+      </div>
+
+      <form id="bookingForm" class="p-5 space-y-4">
+        <input type="hidden" name="room_id" id="bookingRoomId">
+        <div>
+          <label class="block text-sm font-medium mb-1">Start date</label>
+          <input id="bookingStart" name="start_date" type="date" required class="w-full border rounded-xl px-3 py-2 border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">End date</label>
+          <input id="bookingEnd" name="end_date" type="date" required class="w-full border rounded-xl px-3 py-2 border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Guests</label>
+          <input id="bookingGuests" name="guests" type="number" min="1" value="1" class="w-full border rounded-xl px-3 py-2 border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Extras / Requests</label>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <label class="inline-flex items-center gap-2"><input type="checkbox" name="extras[]" value="extra_towel"> Extra towel</label>
+            <label class="inline-flex items-center gap-2"><input type="checkbox" name="extras[]" value="extra_pillow"> Extra pillow</label>
+            <label class="inline-flex items-center gap-2"><input type="checkbox" name="extras[]" value="early_checkin"> Early check-in</label>
+            <label class="inline-flex items-center gap-2"><input type="checkbox" name="extras[]" value="late_checkout"> Late check-out</label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Additional notes</label>
+          <textarea id="bookingNotes" name="notes" rows="3" class="w-full border rounded-xl px-3 py-2 border-slate-300"></textarea>
+        </div>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="bookingCancel" class="px-4 py-2 rounded-full border hover:bg-slate-50">Cancel</button>
+          <button id="bookingSubmit" class="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700">Confirm booking</button>
+        </div>
+        <div id="bookingError" class="text-sm text-red-600 hidden"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Upload Payment</h3>
+        <button id="paymentClose" class="text-slate-500 hover:text-slate-700">✖</button>
+      </div>
+      <form id="paymentForm" class="p-5 space-y-4">
+        <input type="hidden" id="paymentBookingId" name="booking_id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Method</label>
+          <select id="paymentMethod" name="method" class="w-full border rounded-xl px-3 py-2 border-slate-300">
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="gcash">GCash</option>
+            <option value="paymaya">PayMaya</option>
+            <option value="cod">COD</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Reference</label>
+          <input id="paymentReference" name="reference" class="w-full border rounded-xl px-3 py-2 border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Receipt</label>
+          <input id="paymentReceipt" name="receipt" type="file" accept=".jpg,.jpeg,.png,.pdf" class="w-full" />
+        </div>
+        <p id="paymentError" class="text-sm text-red-600 hidden"></p>
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="paymentCancel" class="px-4 py-2 rounded-full border hover:bg-slate-50">Cancel</button>
+          <button id="paymentSubmit" class="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Approvals Modal -->
+  <div id="approvalsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden">
+      <div class="px-5 py-3 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Pending Approvals</h3>
+        <button id="approvalsClose" class="text-slate-500 hover:text-slate-700">✖</button>
+      </div>
+      <div class="p-5">
+        <div id="approvalsEmpty" class="hidden text-slate-500 text-sm">No pending bookings 🎉</div>
+        <div id="approvalsList" class="space-y-3"></div>
+        <div id="approvalsError" class="hidden text-sm text-red-600 mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/dashboard.js" defer></script>
+</body>
+</html>
