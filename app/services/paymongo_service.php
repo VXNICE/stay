@@ -19,9 +19,6 @@ class PayMongoService
         $this->publicKey = config('config.payment.paymongo.public_key');
         $this->secretKey = config('config.payment.paymongo.secret_key');
         $this->baseUrl = config('config.payment.paymongo.base_url');
-        echo $this->baseUrl;
-        echo $this->publicKey;
-        echo $this->secretKey;
         if (!$this->secretKey) {
             throw new Exception("PayMongo secret key not set in environment variables");
         }

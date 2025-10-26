@@ -10,18 +10,25 @@ document.getElementById('paymentForm').addEventListener('submit', async function
     try {
         const response = await fetch('/api/modules/payment/process_payment.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
             body: `amount=${encodeURIComponent(amount)}&method=${encodeURIComponent(method)}`
         });
 
         const data = await response.json();
 
+        console.log(data);
+
         if (data.success) {
-            resultDiv.innerHTML = `
-        <p>Redirecting to ${method.toUpperCase()}...</p>
-        <a href="${data.checkout_url}" target="_blank">Click here if not redirected</a>
-      `;
-            window.location.href = data.checkout_url; // auto redirect
+            if (data.should_redirect) {
+                resultDiv.innerHTML = `
+                <p>Redirecting to ${method.toUpperCase()}...</p>
+                <a href="${data.redirect_url}" target="_blank">Click here if not redirected</a>
+            `;
+                window.location.href = data.redirect_url; // auto redirect
+            }
         } else {
             resultDiv.innerHTML = `<p style="color:red;">Error: ${data.message}</p>`;
         }

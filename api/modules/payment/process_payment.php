@@ -3,6 +3,7 @@ require_once '../../../bootstrap/bootstrap.php';
 require APP_PATH . '/app/services/paymongo_service.php';
 
 header('Content-Type: application/json');
+header('Accept: application/json');
 
 //echo config('config.payment.paymongo.public_key');
 $amount = $_POST['amount'] ?? null;
@@ -49,19 +50,30 @@ try {
             :provider
         )
      ");
+
+    $redirectUrl = $attachPaymentMethodResponse['data']['attributes']['next_action']['redirect']['url'] ?? null;
+    $shouldRedirect = $attachPaymentMethodResponse['data']['attributes']['status'] === 'awaiting_next_action';
+
     $stmt->execute([
         ':txn_id' => $txnId,
         ':amount' => $amount,
         ':method' => strtoupper($method),
         ':status' => 'PENDING',
-        ':checkout_url' => 'temp',
+        ':checkout_url' => $redirectUrl,
         ':payment_intent_id' => $payIntentResponse['data']['id'],
         ':payment_method_id' => $payMethodResponse['data']['id'],
         ':provider' => 'PAYMONGO'
     ]);
 
+    $redirectUrl = null;
+    if ($attachPaymentMethodResponse['data']['attributes']['status'] === 'awaiting_next_action') {
+        $redirectUrl = $attachPaymentMethodResponse['data']['attributes']['next_action']['redirect']['url'];
+    }
+
     echo json_encode([
-        'success' => true
+        'success' => true,
+        'redirect_url' => $redirectUrl,
+        'should_redirect' => $shouldRedirect,
     ]);
 
 } catch (PDOException $e) {
