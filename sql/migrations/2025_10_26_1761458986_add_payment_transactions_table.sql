@@ -4,6 +4,9 @@ CREATE TABLE transactions (
     amount DECIMAL(10,2) NOT NULL,
     method VARCHAR(20) NOT NULL,
     status VARCHAR(20) DEFAULT 'PENDING',
+    provider VARCHAR(100) NOT NULL,
+    payment_intent_id VARCHAR(100) NOT NULL,
+    payment_method_id VARCHAR(100) NOT NULL,
     checkout_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

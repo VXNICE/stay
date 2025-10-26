@@ -16,20 +16,48 @@ if (!$amount || !$method) {
 $paymongoService = new PayMongoService();
 
 try {
+    $payIntentResponse = $paymongoService->createPaymentIntent($amount, $method);
+    $payMethodResponse = $paymongoService->createPaymentMethod($method);
+    $attachPaymentMethodResponse = $paymongoService->attachPaymentMethod(
+        $payIntentResponse['data']['id'],
+        $payMethodResponse['data']['id']
+    );
+
     # Generate a unique transaction ID
     $txnId = uniqid("txn_{$method}_");
 
     $stmt = $pdo->prepare("
         INSERT INTO transactions
-            (txn_id, amount, method, status, checkout_url)
-         VALUES (:txn_id, :amount, :method, :status, :checkout_url)
+            (
+                txn_id, 
+                amount, 
+                method, 
+                status, 
+                checkout_url, 
+                payment_intent_id, 
+                payment_method_id,
+                provider
+            )
+        VALUES (
+            :txn_id, 
+            :amount, 
+            :method, 
+            :status, 
+            :checkout_url,
+            :payment_intent_id,
+            :payment_method_id,
+            :provider
+        )
      ");
     $stmt->execute([
         ':txn_id' => $txnId,
         ':amount' => $amount,
         ':method' => strtoupper($method),
         ':status' => 'PENDING',
-        ':checkout_url' => 'temp'
+        ':checkout_url' => 'temp',
+        ':payment_intent_id' => $payIntentResponse['data']['id'],
+        ':payment_method_id' => $payMethodResponse['data']['id'],
+        ':provider' => 'PAYMONGO'
     ]);
 
     echo json_encode([
@@ -38,4 +66,9 @@ try {
 
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
+} catch (Exception $exception) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Payment Error Occurred: ' . $exception->getMessage()
+    ]);
 }

@@ -56,6 +56,73 @@ class PayMongoService
     }
 
     /**
+     * Creates a payment method with the specified amount and type.
+     *
+     * @param string $type The type of payment method to create (e.g., 'card', 'bank_transfer').
+     *
+     * @return array The response from the API after creating the payment method.
+     *
+     * @throws Exception If the API request fails or returns an error.
+     */
+    public function createPaymentMethod(string $type): array
+    {
+        $data = [
+            'data' => [
+                'attributes' => [
+                    'type' => $type,
+                    'details' => [
+                        'card_number' => '123412134',
+                        'exp_month' => '12',
+                        'exp_year' => '2024',
+                        'cvc' => '123',
+                        'bank_code' => 'test_bank_one'
+                    ],
+                    'billing' => [
+                        'address' => [
+                            'line1' => '123 Main St',
+                            'line2' => 'Apartment 1',
+                            'city' => 'El Salvador',
+                            'state' => 'Mis Or.',
+                            'postal_code' => '94107',
+                            'country' => 'PH'
+                        ],
+                        'name' => 'Juan de la Cruz',
+                        'email' => 'juandelacruz@test.com',
+                        'phone' => '0933423232'
+                    ],
+                ]
+            ]
+        ];
+
+        return $this->request('/payment_methods', $data);
+    }
+
+    /**
+     * Attaches a payment method to a specified payment intent.
+     *
+     * @param string $paymentIntentId The ID of the payment intent to which the payment method will be attached.
+     * @param string $paymentMethodId The ID of the payment method to attach to the payment intent.
+     *
+     * @return array The response from the API after attaching the payment method.
+     *
+     * @throws Exception If the API request fails or returns an error response.
+     */
+    public function attachPaymentMethod(string $paymentIntentId, string $paymentMethodId): array
+    {
+        $data = [
+            'data' => [
+                'attributes' => [
+                    'payment_method' => $paymentMethodId,
+                    'client_key' => $this->secretKey,
+                    'return_url' => 'https://webhook.site/0e9069d9-9859-4078-a266-17a7f36e2775'
+                ]
+            ]
+        ];
+
+        return $this->request("/payment_intents/{$paymentIntentId}/attach", $data);
+    }
+
+    /**
      * Retrieve source/payment status by ID
      */
     public function getSource(string $sourceId): array
