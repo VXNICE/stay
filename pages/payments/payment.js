@@ -8,7 +8,7 @@ document.getElementById('paymentForm').addEventListener('submit', async function
     resultDiv.innerHTML = "Processing payment...";
 
     try {
-        const response = await fetch('process_payment.php', {
+        const response = await fetch('/api/modules/payment/process_payment.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `amount=${encodeURIComponent(amount)}&method=${encodeURIComponent(method)}`

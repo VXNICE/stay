@@ -11,7 +11,7 @@ return [
         ],
     ],
     'payment' => [
-        'paymong' => [
+        'paymongo' => [
             'base_url' => env('PAYMONGO_API_BASE_URL_V1'),
             'public_key' => env('PAYMONGO_PUBLIC_KEY'),
             'secret_key' => env('PAYMONGO_SECRET_KEY')

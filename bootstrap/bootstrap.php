@@ -1,6 +1,7 @@
 <?php
 
-require_once 'index.php';
+require_once __DIR__ . '/../index.php';
+
 /*
 | This is your application bootstrap file.
 | This is where you should load your environment, configuration, database,
@@ -175,5 +176,3 @@ $_GLOBAL_CONFIG = require_once CONFIG_PATH . '/config.php';
 # Now include your database connection
 # This will expose the $pdo object into your entire application
 require_once DATABASE_PATH . '/db.php';
-
-dd($pdo);

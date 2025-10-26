@@ -1,8 +1,10 @@
 <?php
+require_once '../../../bootstrap/bootstrap.php';
+require APP_PATH . '/app/services/paymongo_service.php';
+
 header('Content-Type: application/json');
 
-require_once BOOTSTRAP_PATH . 'bootstrap.php';
-
+//echo config('config.payment.paymongo.public_key');
 $amount = $_POST['amount'] ?? null;
 $method = $_POST['method'] ?? null;
 
@@ -11,23 +13,15 @@ if (!$amount || !$method) {
     exit;
 }
 
-// Simulate payment gateway URLs
-if ($method === 'paymaya') {
-    $checkoutUrl = "https://sandbox.paymaya.com/checkout/simulated-session?amount={$amount}";
-} elseif ($method === 'gcash') {
-    $checkoutUrl = "https://sandbox.gcash.com/payment/simulated-session?amount={$amount}";
-} else {
-    echo json_encode(['success' => false, 'message' => 'Invalid payment method']);
-    exit;
-}
+$paymongoService = new PayMongoService();
 
 try {
-    // Generate a unique transaction ID
-    $txnId = uniqid('txn_');
+    # Generate a unique transaction ID
+    $txnId = uniqid("txn_{$method}_");
 
     $stmt = $pdo->prepare("
-        INSERT INTO transactions 
-            (txn_id, amount, method, status, checkout_url) 
+        INSERT INTO transactions
+            (txn_id, amount, method, status, checkout_url)
          VALUES (:txn_id, :amount, :method, :status, :checkout_url)
      ");
     $stmt->execute([
@@ -35,10 +29,12 @@ try {
         ':amount' => $amount,
         ':method' => strtoupper($method),
         ':status' => 'PENDING',
-        ':checkout_url' => $checkoutUrl
+        ':checkout_url' => 'temp'
     ]);
 
-    echo json_encode(['success' => true, 'checkout_url' => $checkoutUrl]);
+    echo json_encode([
+        'success' => true
+    ]);
 
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
