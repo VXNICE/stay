@@ -1,0 +1,9 @@
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    txn_id VARCHAR(100) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    method VARCHAR(20) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    checkout_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
